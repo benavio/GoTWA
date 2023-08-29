@@ -151,9 +151,8 @@ func (p PostgresStorage) AddSegment(id string, segment string, a album) (album, 
 		return album, err
 	}
 	if contains(segment, album.Segments) {
-		return album, fmt.Errorf("Segment already exists in segments")
+		album.Segments = append(album.Segments, segment)
 	}
-	album.Segments = append(album.Segments, segment)
 	_, err = p.db.Exec("update albums set segments=$1, logchanges=$2 WHERE id=$3", (*pq.StringArray)(&album.Segments), album.LogChanges, album.ID)
 	if err != nil {
 		return album, err
@@ -176,7 +175,6 @@ func (p PostgresStorage) DeleteSegment(id string, segment string, a album) error
 	}
 	for i, v := range album.Segments {
 		if v == segment {
-			// album.Segments = append(album.Segments[i:], album.Segments[:i+1]...)
 			album.Segments = slices.Delete(album.Segments, i, i+1)
 		}
 	}
@@ -188,17 +186,19 @@ func (p PostgresStorage) DeleteSegment(id string, segment string, a album) error
 }
 
 func contains(segment string, segments []string) bool {
-	for _, s := range segments {
-		if s == segment {
-			return true
+	mapSegments := map[string]string{
+		"AVITO_VOICE_MESSAGES":  "AVITO_VOICE_MESSAGES",
+		"AVITO_PERFORMANCE_VAS": "AVITO_PERFORMANCE_VAS",
+		"AVITO_DISCOUNT_30":     "AVITO_DISCOUNT_30",
+		"AVITO_DISCOUNT_50":     "AVITO_DISCOUNT_50",
+	}
+	if mapSegments[segment] == segment {
+		for _, s := range segments {
+			if s == segment {
+				fmt.Println(true)
+				return true
+			}
 		}
 	}
 	return false
 }
-
-const (
-	voice       = "AVITO_VOICE_MESSAGES"
-	performance = "AVITO_PERFORMANCE_VAS"
-	discount30  = "AVITO_DISCOUNT_30"
-	discount50  = "AVITO_DISCOUNT_50"
-)

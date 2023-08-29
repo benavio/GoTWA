@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gosimple/slug"
 )
 
 type HttpError struct {
@@ -78,7 +79,6 @@ func deleteAlbumById(c *gin.Context) {
 func addSegmetsById(c *gin.Context) {
 	id := c.Param("id")
 	segment := c.Param("segment")
-	fmt.Println(id, segment)
 	var newAlbum album
 	c.BindJSON(&newAlbum)
 	album, err := storage.AddSegment(id, segment, newAlbum)
@@ -104,6 +104,7 @@ func removeSegmetsById(c *gin.Context) {
 }
 
 func getRouter() *gin.Engine {
+	slug.Make("Hellö Wörld хелло ворлд")
 	router := gin.Default()
 	gin.SetMode(gin.ReleaseMode)
 	router.POST("/albums", postAlbums)

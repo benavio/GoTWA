@@ -11,8 +11,8 @@ type MemoryStorage struct {
 
 func NewMemoryStorage() MemoryStorage {
 	var albums = []album{
-		{ID: "1000", Segments: []string{voice}, LogChanges: ""},
-		{ID: "1002", Segments: []string{voice}, LogChanges: ""},
+		{ID: "1000", Segments: []string{}, LogChanges: ""},
+		{ID: "1002", Segments: []string{}, LogChanges: ""},
 		{ID: "1004", Segments: []string{}, LogChanges: ""},
 	}
 	return MemoryStorage{albums: albums}
