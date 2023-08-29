@@ -1,0 +1,28 @@
+
+curl http://localhost:8080/albums 
+
+###
+
+curl http://localhost:8080/albums/3
+
+###
+
+curl -X "DELETE" http://localhost:8080/albums/1
+
+###
+
+curl -X "PUT"  http://localhost:8080/albums/4 \
+    --include\
+    --header "Content-Type: application/json" \
+    --request "POST" \
+    --data '{"title": "Karlos Makaroni"}'
+
+###
+
+curl http://localhost:8080/albums \
+    --include\
+    --header "Content-Type: application/json" \
+    --request "POST" \
+    --data '{"id": "4", "title": "Gib Beam", "artist": "John Coltrane", "price": 56.99}'
+
+###
