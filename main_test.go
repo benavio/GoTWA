@@ -13,12 +13,16 @@ func handleRequest(w *httptest.ResponseRecorder, r *http.Request) {
 }
 
 func createTestAlbum() album {
-	testAlbum := album{ID: "2", Title: "TEST", Artist: "TESTOVICH", Price: 0.01}
+	testAlbum := album{
+		ID:         "1000",
+		Segments:   []string{"segment1", "segment2"},
+		LogChanges: "log changes",
+	}
 	storage.Create(testAlbum)
 	return testAlbum
 }
 func TestCreateAlbums(t *testing.T) {
-	request, _ := http.NewRequest("POST", "/albums", strings.NewReader(`{"id": "4", "title": "Gib Beam", "artist": "John Coltrane", "price": 56.99}`))
+	request, _ := http.NewRequest("POST", "/albums", strings.NewReader(`{"id": "1000", "Segments": {"1000"}, "LogChanges": "qwe"}`))
 	w := httptest.NewRecorder()
 	handleRequest(w, request)
 	if w.Code != http.StatusCreated {
@@ -36,8 +40,7 @@ func TestAlbumsList(t *testing.T) {
 }
 
 func TestAlbumDetail(t *testing.T) {
-	testID := createTestAlbum().ID
-	request, _ := http.NewRequest("GET", "/albums/"+testID, strings.NewReader(""))
+	request, _ := http.NewRequest("GET", "/albums/1000", strings.NewReader(""))
 	w := httptest.NewRecorder()
 	handleRequest(w, request)
 	if w.Code != http.StatusOK {
@@ -56,8 +59,7 @@ func TestAlbumNotFound(t *testing.T) {
 }
 
 func TestUpdateAlbum(t *testing.T) {
-	testID := createTestAlbum().ID
-	request, _ := http.NewRequest("PUT", "/albums/"+testID, strings.NewReader(`{"id": "4", "title": "TEST", "artist": "TEST", "price": 56.99}`))
+	request, _ := http.NewRequest("POST", "/albums/1000", strings.NewReader(`{"id": "1000", "segments": ["Gib_Beam"], "logchanges": ""`))
 	w := httptest.NewRecorder()
 	handleRequest(w, request)
 	if w.Code != http.StatusOK {
@@ -67,7 +69,7 @@ func TestUpdateAlbum(t *testing.T) {
 
 func TestUpdateAlbumNotFound(t *testing.T) {
 	albumID := "9999"
-	request, _ := http.NewRequest("PUT", "/albums/"+albumID, strings.NewReader(""))
+	request, _ := http.NewRequest("POST", "/albums/"+albumID, strings.NewReader(""))
 	w := httptest.NewRecorder()
 	handleRequest(w, request)
 	if w.Code != http.StatusBadRequest {
@@ -95,8 +97,7 @@ func TestCreateBadStructure(t *testing.T) {
 }
 
 func TestDeleteAlbum(t *testing.T) {
-	testID := createTestAlbum().ID
-	request, _ := http.NewRequest("DELETE", "/albums/"+testID, strings.NewReader(""))
+	request, _ := http.NewRequest("DELETE", "/albums/", strings.NewReader(""))
 	w := httptest.NewRecorder()
 	handleRequest(w, request)
 	if w.Code != http.StatusNoContent {

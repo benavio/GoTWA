@@ -1,28 +1,46 @@
+### getAlbum
 
-curl http://localhost:8080/albums 
+curl http://localhost:8080/albums
 
-###
+### Add new segment in album.Segments
 
-curl http://localhost:8080/albums/3
+curl -X "PUT"  http://localhost:8080/albums/1/AVITO_VOICE_MESSAGES
 
-###
+### Delete segment in album.Segments
 
-curl -X "DELETE" http://localhost:8080/albums/1
+curl -X "DELETE"  http://localhost:8080/albums/1010/AVITO_VOICE_MESSAGES
 
-###
+### ReadOne
 
-curl -X "PUT"  http://localhost:8080/albums/4 \
+curl -X "GET" http://localhost:8080/albums/1         
+
+### Delete
+
+curl -X "DELETE" http://localhost:8080/albums/1012
+
+### PUT
+
+curl -X "PUT"  http://localhost:8080/albums/1010
     --include\
     --header "Content-Type: application/json" \
-    --request "POST" \
-    --data '{"title": "Karlos Makaroni"}'
+    --request "PUT" \
+    --data '{"id": "1009", "Segments": [], "LogChanges": ""}'
 
-###
+### ADD 
 
 curl http://localhost:8080/albums \
     --include\
     --header "Content-Type: application/json" \
     --request "POST" \
-    --data '{"id": "4", "title": "Gib Beam", "artist": "John Coltrane", "price": 56.99}'
+    --data '{"id": "1", "Segments": ["AVITO_QWE", "Counter"], "LogChanges": ""}'
 
-###
+
+### PUT Segments
+
+curl -X "POST"  http://localhost:8080/albums/1012/AVITO_VOICE_MESSAGES            
+    --include\
+    --header "Content-Type: application/json" \
+    --request "POST" \
+    --data '{"id": "1010", "Segments": ["AVITO_DISCOUNT_30", "AVITO_PERFORMANCE_VAS"], "LogChanges": ""}'
+
+
