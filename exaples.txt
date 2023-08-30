@@ -1,46 +1,35 @@
 ### getAlbum
 
-curl http://localhost:8080/albums
+curl http://localhost:8080/segments
 
-### Add new segment in album.Segments
+### Add new segments in album.Segments
 
-curl -X "PUT"  http://localhost:8080/albums/1/2
+curl -X PUT --data "segments=AVITO_PERFORMANCE" http://localhost:8080/albums/1000
+
+### Delete segments in album.Segments
+
+curl -X DELETE "http://localhost:8080/albums/1000?segments=AVITO_DISCOUNT_30,AVITO_DISCOUNT_50,AVITO_VOICE_MESSAGES" 
 
 ### Delete segment in album.Segments
 
-curl -X "DELETE"  http://localhost:8080/albums/1/2
+curl -X DELETE http://localhost:8080/albums/1000/AVITO_VOICE_MESSAGES
 
 ### ReadOne
 
-curl -X "GET" http://localhost:8080/albums/1       
+curl -X "GET" http://localhost:8080/albums/1000      
 
 ### Delete
 
-curl -X "DELETE" http://localhost:8080/albums/1
+curl -X "DELETE" http://localhost:8080/albums/122
 
-### PUT
+### Add New segment in segmentsArray
 
-curl -X "PUT"  http://localhost:8080/albums/1010
-    --include\
-    --header "Content-Type: application/json" \
-    --request "PUT" \
-    --data '{"id": "1009", "Segments": [], "LogChanges": ""}'
+curl -X POST --data "segments=AVITO_VOICE_MESSAGES,AVITO_PERFORMANCE,AVITO_DISCOUNT_50,AVITO_DISCOUNT_30" http://localhost:8080/segments
 
-### ADD 
+####
 
-curl http://localhost:8080/albums \
+curl http://localhost:8080/segments \
     --include\
     --header "Content-Type: application/json" \
     --request "POST" \
-    --data '{"id": "1", "Segments": [], "LogChanges": ""}'
-
-
-### PUT Segments
-
-curl -X "POST"  http://localhost:8080/albums/1012/AVITO_VOICE_MESSAGES            
-    --include\
-    --header "Content-Type: application/json" \
-    --request "POST" \
-    --data '{"id": "1010", "Segments": ["AVITO_DISCOUNT_30", "AVITO_PERFORMANCE_VAS"], "LogChanges": ""}'
-
-
+    --data '{"id": "1", "Segments": ["AVITO_VOICE_MESSAGES"]}'

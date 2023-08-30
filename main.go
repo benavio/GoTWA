@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gosimple/slug"
 )
 
 type HttpError struct {
@@ -76,12 +75,13 @@ func deleteAlbumById(c *gin.Context) {
 
 }
 
-func addSegmetsById(c *gin.Context) {
+func addSegmetsToUserById(c *gin.Context) {
 	id := c.Param("id")
-	segment := c.Param("segment")
+	segments := c.PostForm("segments")
 	var newAlbum album
 	c.BindJSON(&newAlbum)
-	album, err := storage.AddSegment(id, segment, newAlbum)
+	fmt.Println(newAlbum.LogChanges)
+	album, err := storage.AddSegmentsToUser(id, segments, newAlbum)
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, err)
 		return
@@ -91,11 +91,12 @@ func addSegmetsById(c *gin.Context) {
 
 func removeSegmetsById(c *gin.Context) {
 	id := c.Param("id")
-	segment := c.Param("segment")
-	fmt.Println(id, segment)
+	// segments := c.Param("segment")
+	segments := c.Query("segments")
+	fmt.Println(id, segments)
 	var newAlbum album
 	c.BindJSON(&newAlbum)
-	err := storage.DeleteSegment(id, segment, newAlbum)
+	err := storage.DeleteUserSegments(id, segments, newAlbum)
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, HttpError{"HTTP_ERROR:not found"})
 		return
@@ -104,17 +105,16 @@ func removeSegmetsById(c *gin.Context) {
 }
 
 func getRouter() *gin.Engine {
-	slug.Make("Hellö Wörld хелло ворлд")
 	router := gin.Default()
 	gin.SetMode(gin.ReleaseMode)
 	router.POST("/albums", postAlbums)
 	router.GET("/albums", getAlbums)
 	// router.GET("/albums/:id", getAlbumById)
-	router.GET("/albums/:id", getUserContainsById)
-	router.PUT("/albums/:id", updateAlbumsById)
-	router.DELETE("/albums/:id", deleteAlbumById)
-	router.PUT("/albums/:id/:segment", addSegmetsById)
-	router.DELETE("/albums/:id/:segment", removeSegmetsById)
+	// router.PUT("/albums/:id", updateAlbumsById)
+	router.GET("/albums/:id", getUserContainsById) //gj
+	// router.DELETE("/albums/:id", deleteAlbumById)
+	router.PUT("/albums/:id", addSegmetsToUserById) //gj
+	router.DELETE("/albums/:id", removeSegmetsById) //gj
 	return router
 }
 

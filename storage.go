@@ -7,6 +7,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/gosimple/slug"
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"golang.org/x/exp/slices"
@@ -16,11 +17,11 @@ type Storage interface {
 	Create(album) album
 	Read() []album
 	ReadOne(id string) (album, error)
-	UserContains(id string) (album, error)
 	Update(id string, a album) (album, error)
-	AddSegment(id string, segment string, a album) (album, error)
-	DeleteSegment(id string, segment string, a album) error
 	Delete(id string) error
+	AddSegmentsToUser(id string, segments string, a album) (album, error)
+	DeleteUserSegments(id string, segments string, a album) error
+	UserContains(id string) (album, error)
 }
 
 type PostgresStorage struct {
@@ -29,6 +30,10 @@ type PostgresStorage struct {
 
 func (p PostgresStorage) CreateSchema() error {
 	_, err := p.db.Exec("create table if not exists albums (ID char(16) primary key, Segments text[], LogChanges text)")
+	return err
+}
+func (p PostgresStorage) CreateSchema2() error {
+	_, err := p.db.Exec("create table if not exists segments (ID char(16) primary key, Segments text[])")
 	return err
 }
 
@@ -43,6 +48,10 @@ func NewPostgresStorage() PostgresStorage {
 	}
 	storage := PostgresStorage{db: db}
 	err = storage.CreateSchema()
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = storage.CreateSchema2()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -90,6 +99,30 @@ func (p PostgresStorage) ReadOne(id string) (album, error) {
 	return album, nil
 }
 
+func (p PostgresStorage) Update(id string, a album) (album, error) {
+	result, _ := p.db.Exec("update albums set segments=$1, logchanges=$2 where id=$3", (*pq.StringArray)(&a.Segments), a.LogChanges, a.ID)
+	err := handlerNotFound(result)
+	return a, err
+}
+
+func (p PostgresStorage) Delete(id string) error {
+	result, err := p.db.Exec("delete from albums where id=$1", id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = handlerNotFound(result)
+	return err
+}
+
+func handlerNotFound(result sql.Result) error {
+	countAffected, _ := result.RowsAffected()
+	if countAffected == 0 {
+		return errors.New("Not found")
+	}
+	return nil
+}
+
+// --------------------------  JSON RESPONSE  -----------------------
 func (p PostgresStorage) UserContains(id string) (album, error) {
 	var album album
 	row := p.db.QueryRow("select * from albums where id = $1", id)
@@ -118,29 +151,8 @@ func (p PostgresStorage) UserContains(id string) (album, error) {
 	return album, nil
 }
 
-func (p PostgresStorage) Update(id string, a album) (album, error) {
-	result, _ := p.db.Exec("update albums set segments=$1, logchanges=$2 where id=$3", (*pq.StringArray)(&a.Segments), a.LogChanges, a.ID)
-	err := handlerNotFound(result)
-	return a, err
-}
-
-func (p PostgresStorage) Delete(id string) error {
-	result, err := p.db.Exec("delete from albums where id=$1", id)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = handlerNotFound(result)
-	return err
-}
-func handlerNotFound(result sql.Result) error {
-	countAffected, _ := result.RowsAffected()
-	if countAffected == 0 {
-		return errors.New("Not found")
-	}
-	return nil
-}
-
-func (p PostgresStorage) AddSegment(id string, segment string, a album) (album, error) {
+// ------------------------    DONE    ------------------------
+func (p PostgresStorage) AddSegmentsToUser(id string, segments string, a album) (album, error) {
 	var album album
 	row := p.db.QueryRow("select * from albums where id = $1", id)
 	err := row.Scan(&album.ID, (*pq.StringArray)(&album.Segments), &album.LogChanges)
@@ -150,8 +162,11 @@ func (p PostgresStorage) AddSegment(id string, segment string, a album) (album, 
 		}
 		return album, err
 	}
-	if contains(segment, album.Segments) {
-		album.Segments = append(album.Segments, segment)
+	segment := strings.Split(segments, ",")
+	for _, v := range segment {
+		if checkSegment(v) && !checkContains(v, album.Segments) {
+			album.Segments = append(album.Segments, v)
+		}
 	}
 	_, err = p.db.Exec("update albums set segments=$1, logchanges=$2 WHERE id=$3", (*pq.StringArray)(&album.Segments), album.LogChanges, album.ID)
 	if err != nil {
@@ -160,7 +175,8 @@ func (p PostgresStorage) AddSegment(id string, segment string, a album) (album, 
 	return album, nil
 }
 
-func (p PostgresStorage) DeleteSegment(id string, segment string, a album) error {
+// ------------------------    DONE    ------------------------
+func (p PostgresStorage) DeleteUserSegments(id string, segments string, a album) error {
 	var album album
 	row := p.db.QueryRow("select * from albums where id = $1", id)
 	err := row.Scan(&album.ID, (*pq.StringArray)(&album.Segments), &album.LogChanges)
@@ -170,12 +186,14 @@ func (p PostgresStorage) DeleteSegment(id string, segment string, a album) error
 		}
 		return err
 	}
-	if !contains(segment, album.Segments) {
-		return errors.New("Segment missing in Segments")
-	}
-	for i, v := range album.Segments {
-		if v == segment {
-			album.Segments = slices.Delete(album.Segments, i, i+1)
+	segment := strings.Split(segments, ",")
+	for _, val := range segment {
+		if checkContains(val, album.Segments) {
+			for i, v := range album.Segments {
+				if v == val {
+					album.Segments = slices.Delete(album.Segments, i, i+1)
+				}
+			}
 		}
 	}
 	_, err = p.db.Exec("update albums set segments=$1, logchanges=$2 WHERE id=$3", (*pq.StringArray)(&album.Segments), album.LogChanges, album.ID)
@@ -185,20 +203,52 @@ func (p PostgresStorage) DeleteSegment(id string, segment string, a album) error
 	return nil
 }
 
-func contains(segment string, segments []string) bool {
-	mapSegments := map[string]string{
-		"AVITO_VOICE_MESSAGES":  "AVITO_VOICE_MESSAGES",
-		"AVITO_PERFORMANCE_VAS": "AVITO_PERFORMANCE_VAS",
-		"AVITO_DISCOUNT_30":     "AVITO_DISCOUNT_30",
-		"AVITO_DISCOUNT_50":     "AVITO_DISCOUNT_50",
-	}
-	if mapSegments[segment] == segment {
-		for _, s := range segments {
-			if s == segment {
-				fmt.Println(true)
-				return true
-			}
+func checkContains(segment string, segments []string) bool {
+	for _, s := range segments {
+		if slug.Make(s) == slug.Make(segment) {
+			fmt.Println(true)
+			return true
 		}
 	}
 	return false
+}
+
+func checkSegment(segment string) bool {
+	segments := segmentsArray()
+	for _, v := range segments {
+		if slug.Make(v) == slug.Make(segment) {
+			return true
+		}
+	}
+	return false
+}
+
+func (p PostgresStorage) Readsegments() []string {
+	rows, err := p.db.Query("select * from  segments")
+	if err != nil {
+		log.Fatal("Read error 1 -> ", err)
+	}
+	defer rows.Close()
+
+	var albums []string
+	for rows.Next() {
+		var a []string
+		err := rows.Scan(&a)
+		if err != nil {
+			log.Fatal("Read error 2 -> ", err)
+		}
+		albums = append(albums, a...)
+	}
+
+	return albums
+}
+
+func segmentsArray() []string {
+	segments := []string{
+		"AVITO_VOICE_MESSAGES",
+		"AVITO_PERFORMANCE_VAS",
+		"AVITO_DISCOUNT_30",
+		"AVITO_DISCOUNT_50",
+	}
+	return segments
 }

@@ -4,6 +4,12 @@
 
 
 ### view db in docker
-## `docker exec -it <<containerName>> /bin/bash`
-## `psql -U user -d db`
-## `\dt`
+`docker exec -it <<containerName>> /bin/bash`
+`psql -U user -d db`
+`\dt`
+
+
+### Check endpoints
+curls to check endpoint in exaples.txt
+for curl u can use some extension
+in this project was used "Rest Client"
