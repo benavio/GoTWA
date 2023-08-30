@@ -10,6 +10,6 @@
 
 
 ### Check endpoints
-curls to check endpoint in exaples.txt
-for curl u can use some extension
-in this project was used "Rest Client"
+curls to check endpoint in exaples.txt.
+for curl u can use some extension,
+in this project was used "Rest Client".
