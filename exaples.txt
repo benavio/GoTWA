@@ -1,35 +1,48 @@
-### getAlbum
+### Get all users
 
-curl http://localhost:8080/segments
+curl http://localhost:8080/albums
 
-### Add new segments in album.Segments
+###
 
-curl -X PUT --data "segments=AVITO_PERFORMANCE" http://localhost:8080/albums/1000
+curl -X POST  http://localhost:8080/albums/add-user/1004
 
-### Delete segments in album.Segments
+### Add new segments by id
 
-curl -X DELETE "http://localhost:8080/albums/1000?segments=AVITO_DISCOUNT_30,AVITO_DISCOUNT_50,AVITO_VOICE_MESSAGES" 
+curl -X PUT  http://localhost:8080/albums/1000/add-segments/avito_discount_30
 
-### Delete segment in album.Segments
 
-curl -X DELETE http://localhost:8080/albums/1000/AVITO_VOICE_MESSAGES
+### Delete segments by id
 
-### ReadOne
+curl -X DELETE "http://localhost:8080/albums/1000/delete-segments/avito_performance_vas,avito_discount_30,avito_discount_50,avito_voice_messages" 
 
-curl -X "GET" http://localhost:8080/albums/1000      
+### Get user
 
-### Delete
+curl -X "GET" http://localhost:8080/albums/1004      
 
-curl -X "DELETE" http://localhost:8080/albums/122
+### Delete user
 
-### Add New segment in segmentsArray
-
-curl -X POST --data "segments=AVITO_VOICE_MESSAGES,AVITO_PERFORMANCE,AVITO_DISCOUNT_50,AVITO_DISCOUNT_30" http://localhost:8080/segments
+curl -X "DELETE" http://localhost:8080/albums/1004
 
 ####
 
-curl http://localhost:8080/segments \
+curl http://localhost:8080/albums \
     --include\
     --header "Content-Type: application/json" \
     --request "POST" \
-    --data '{"id": "1", "Segments": ["AVITO_VOICE_MESSAGES"]}'
+    --data '{"id": "1004", "Segments": ["AVITO_VOICE_MESSAGES"]}'
+
+    
+    
+###############  Segments manipulation
+
+### Add New segment in segmentsArray
+
+curl -X POST  http://localhost:8080/segments/add-new-segment/avito_performance_vas,avito_discount_30,avito_discount_50,avito_voice_messages
+
+####
+
+curl http://localhost:8080/segments
+
+### Delete segment
+
+curl -X DELETE http://localhost:8080/segments/delete-segment/avito_discount_30,avito_discount_50,avito_voice_messages

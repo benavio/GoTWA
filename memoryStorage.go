@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"time"
 )
 
 type MemoryStorage struct {
@@ -11,9 +10,9 @@ type MemoryStorage struct {
 
 func NewMemoryStorage() MemoryStorage {
 	var albums = []album{
-		{ID: "1000", Segments: []string{}, LogChanges: ""},
-		{ID: "1002", Segments: []string{}, LogChanges: ""},
-		{ID: "1004", Segments: []string{}, LogChanges: ""},
+		{ID: "1000", Segments: []string{}, LogChanges: []string{}},
+		{ID: "1002", Segments: []string{}, LogChanges: []string{}},
+		{ID: "1004", Segments: []string{}, LogChanges: []string{}},
 	}
 	return MemoryStorage{albums: albums}
 
@@ -51,7 +50,6 @@ func (s MemoryStorage) UpdateSegment(id string, newAlbum album) (album, error) {
 	for i, obj := range s.albums {
 		if obj.ID == id {
 			s.albums[i].Segments = append(s.albums[i].Segments, segment)
-			s.albums[i].LogChanges += time.Now().Format("2006-01-02 15:04:05") + " added " + segment + "\n"
 			break
 		}
 	}

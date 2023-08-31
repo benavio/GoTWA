@@ -16,13 +16,13 @@ func createTestAlbum() album {
 	testAlbum := album{
 		ID:         "1000",
 		Segments:   []string{"segment1", "segment2"},
-		LogChanges: "log changes",
+		LogChanges: []string{},
 	}
-	storage.Create(testAlbum)
+	storage.CreateUser(testAlbum.ID, testAlbum.Segments[0], testAlbum)
 	return testAlbum
 }
 func TestCreateAlbums(t *testing.T) {
-	request, _ := http.NewRequest("POST", "/albums", strings.NewReader(`{"id": "1000", "Segments": {"1000"}, "LogChanges": "qwe"}`))
+	request, _ := http.NewRequest("POST", "/albums", strings.NewReader(`{"id": "1000", "Segments": {"1000"}, "LogChanges": []}`))
 	w := httptest.NewRecorder()
 	handleRequest(w, request)
 	if w.Code != http.StatusCreated {
@@ -59,7 +59,7 @@ func TestAlbumNotFound(t *testing.T) {
 }
 
 func TestUpdateAlbum(t *testing.T) {
-	request, _ := http.NewRequest("POST", "/albums/1000", strings.NewReader(`{"id": "1000", "segments": ["Gib_Beam"], "logchanges": ""`))
+	request, _ := http.NewRequest("POST", "/albums/1000", strings.NewReader(`{"id": "1000", "segments": ["Gib_Beam"], "logchanges": []}`))
 	w := httptest.NewRecorder()
 	handleRequest(w, request)
 	if w.Code != http.StatusOK {
@@ -79,7 +79,7 @@ func TestUpdateAlbumNotFound(t *testing.T) {
 
 func TestUpdateBadStructure(t *testing.T) {
 	albumID := "9999"
-	request, _ := http.NewRequest("POST", "/albums/"+albumID, strings.NewReader(`{"title": "Karlos Makaroni"}`))
+	request, _ := http.NewRequest("POST", "/albums/"+albumID, strings.NewReader(`{"id": "1000"}`))
 	w := httptest.NewRecorder()
 	handleRequest(w, request)
 	if w.Code != http.StatusNotFound {

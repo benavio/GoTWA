@@ -13,36 +13,40 @@ type HttpError struct {
 
 var storage = NewStorage()
 
+type segmentslist struct {
+	Segments string `json:"segmentlist"`
+}
+
 type album struct {
 	ID         string   `json:"id"`
 	Segments   []string `json:"segments"`
-	LogChanges string   `json:"logchanges"`
+	LogChanges []string `json:"logchanges"`
 }
 
 func postAlbums(c *gin.Context) {
 	var newAlbum album
-	if err := c.BindJSON(&newAlbum); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, HttpError{"bad_request"})
-		fmt.Println(err)
-		return
-	}
-	storage.Create(newAlbum)
-	c.IndentedJSON(http.StatusCreated, newAlbum)
+	id := c.Param("id")
+	segments := c.PostForm("segments")
+	c.BindJSON(&newAlbum)
+	fmt.Println(id, segments)
+	album := storage.CreateUser(id, segments, newAlbum)
+	c.IndentedJSON(http.StatusCreated, album)
 }
 
 func getAlbums(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, storage.Read())
+	c.IndentedJSON(http.StatusOK, storage.ReadUsers())
 }
 
-func getAlbumById(c *gin.Context) {
+func getUserById(c *gin.Context) {
 	id := c.Param("id")
-	album, err := storage.ReadOne(id)
+	album, err := storage.ReadUser(id)
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, HttpError{"not found"})
 		return
 	}
 	c.IndentedJSON(http.StatusOK, album)
 }
+
 func getUserContainsById(c *gin.Context) {
 	id := c.Param("id")
 	album, err := storage.UserContains(id)
@@ -53,11 +57,11 @@ func getUserContainsById(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, album)
 }
 
-func updateAlbumsById(c *gin.Context) {
+func updateUserById(c *gin.Context) {
 	id := c.Param("id")
 	var newAlbum album
 	c.BindJSON(&newAlbum)
-	album, err := storage.Update(id, newAlbum)
+	album, err := storage.UpdateUser(id, newAlbum)
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, HttpError{"not found"})
 		return
@@ -65,9 +69,32 @@ func updateAlbumsById(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, album)
 }
 
-func deleteAlbumById(c *gin.Context) {
+func deleteUserById(c *gin.Context) {
 	id := c.Param("id")
-	err := storage.Delete(id)
+	err := storage.DeleteUser(id)
+	if err != nil {
+		c.IndentedJSON(http.StatusNotFound, HttpError{"not found"})
+	}
+	c.IndentedJSON(http.StatusNoContent, album{})
+
+}
+
+func postSegments(c *gin.Context) {
+	var segments segmentslist
+	arr := c.Param("segmentlist")
+	fmt.Println(arr)
+	c.BindJSON(&segments)
+	storage.CreateSegment(arr, segments)
+	c.IndentedJSON(http.StatusCreated, segments)
+}
+
+func getSegments(c *gin.Context) {
+	c.IndentedJSON(http.StatusOK, storage.ReadSegments())
+}
+
+func deleteSegment(c *gin.Context) {
+	segment := c.Param("segmentlist")
+	err := storage.DeleteSegment(segment)
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, HttpError{"not found"})
 	}
@@ -77,11 +104,11 @@ func deleteAlbumById(c *gin.Context) {
 
 func addSegmetsToUserById(c *gin.Context) {
 	id := c.Param("id")
-	segments := c.PostForm("segments")
+	segments := c.Param("segments")
 	var newAlbum album
 	c.BindJSON(&newAlbum)
-	fmt.Println(newAlbum.LogChanges)
-	album, err := storage.AddSegmentsToUser(id, segments, newAlbum)
+	fmt.Println("main ", id, segments)
+	album, err := storage.AddUserSegments(id, segments, newAlbum)
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, err)
 		return
@@ -91,8 +118,7 @@ func addSegmetsToUserById(c *gin.Context) {
 
 func removeSegmetsById(c *gin.Context) {
 	id := c.Param("id")
-	// segments := c.Param("segment")
-	segments := c.Query("segments")
+	segments := c.Param("segments")
 	fmt.Println(id, segments)
 	var newAlbum album
 	c.BindJSON(&newAlbum)
@@ -107,14 +133,17 @@ func removeSegmetsById(c *gin.Context) {
 func getRouter() *gin.Engine {
 	router := gin.Default()
 	gin.SetMode(gin.ReleaseMode)
-	router.POST("/albums", postAlbums)
+	router.POST("/albums/add-user/:id", postAlbums)
 	router.GET("/albums", getAlbums)
 	// router.GET("/albums/:id", getAlbumById)
-	// router.PUT("/albums/:id", updateAlbumsById)
 	router.GET("/albums/:id", getUserContainsById) //gj
-	// router.DELETE("/albums/:id", deleteAlbumById)
-	router.PUT("/albums/:id", addSegmetsToUserById) //gj
-	router.DELETE("/albums/:id", removeSegmetsById) //gj
+	router.DELETE("/albums/:id", deleteUserById)
+	router.PUT("/albums/:id/add-segments/:segments", addSegmetsToUserById)    //gj
+	router.DELETE("/albums/:id/delete-segments/:segments", removeSegmetsById) //gj
+
+	router.POST("/segments/add-new-segment/:segmentlist", postSegments)
+	router.GET("/segments", getSegments)
+	router.DELETE("/segments/delete-segment/:segmentlist", deleteSegment)
 	return router
 }
 
