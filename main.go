@@ -130,6 +130,22 @@ func removeSegmetsById(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, album{})
 }
 
+func getDeletedList(c *gin.Context) {
+	id := c.Param("id")
+	segments := c.Param("segments")
+	date := c.Param("date")
+	storage.DeletedList(id, segments, date)
+	c.IndentedJSON(http.StatusOK, album{})
+}
+
+func getAddedList(c *gin.Context) {
+	id := c.Param("id")
+	segments := c.Param("segments")
+	date := c.Param("date")
+	storage.AddedList(id, segments, date)
+	c.IndentedJSON(http.StatusOK, album{})
+}
+
 func getRouter() *gin.Engine {
 	router := gin.Default()
 	gin.SetMode(gin.ReleaseMode)
@@ -140,6 +156,9 @@ func getRouter() *gin.Engine {
 	router.DELETE("/albums/:id", deleteUserById)
 	router.PUT("/albums/:id/add-segments/:segments", addSegmetsToUserById)    //gj
 	router.DELETE("/albums/:id/delete-segments/:segments", removeSegmetsById) //gj
+
+	router.GET("/albums/:id/:segments/deleted-list/:date", getDeletedList) //gj
+	router.GET("/albums/:id/:segments/added-list/:date", getAddedList)     //gj
 
 	router.POST("/segments/add-new-segment/:segmentlist", postSegments)
 	router.GET("/segments", getSegments)

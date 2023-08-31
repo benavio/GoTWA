@@ -8,16 +8,25 @@ curl -X POST  http://localhost:8080/albums/add-user/1004
 
 ### Add new segments by id
 
-curl -X PUT  http://localhost:8080/albums/1000/add-segments/avito_discount_30
+curl -X PUT  http://localhost:8080/albums/1004/add-segments/avito_performance_vas,avito_discount_30,avito_discount_50,avito_voice_messages
 
 
 ### Delete segments by id
 
-curl -X DELETE "http://localhost:8080/albums/1000/delete-segments/avito_performance_vas,avito_discount_30,avito_discount_50,avito_voice_messages" 
+curl -X DELETE "http://localhost:8080/albums/1004/delete-segments/avito_performance_vas,avito_discount_30,avito_discount_50,avito_voice_messages" 
 
 ### Get user
 
-curl -X "GET" http://localhost:8080/albums/1004      
+curl -X "GET" http://localhost:8080/albums/1004     
+
+
+### Get LIST DELETE
+
+curl -X "GET" http://localhost:8080/albums/1004/AVITO_PERFORMANCE_VAS/deleted-list/31-8-2023   
+
+### Get LIST ADD
+
+curl -X "GET" http://localhost:8080/albums/1004/AVITO_PERFORMANCE_VAS/added-list/31-8-2023   
 
 ### Delete user
 

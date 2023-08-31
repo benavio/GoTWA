@@ -2,9 +2,11 @@ package main
 
 import (
 	"database/sql"
+	"encoding/csv"
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -12,6 +14,10 @@ import (
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"golang.org/x/exp/slices"
+)
+
+const (
+	timeFormat = ""
 )
 
 type Storage interface {
@@ -26,6 +32,8 @@ type Storage interface {
 	CreateSegment(arr string, segments segmentslist) segmentslist
 	ReadSegments() []string
 	DeleteSegment(segment string) error
+	DeletedList(id string, segments string, date string) error
+	AddedList(id string, segments string, date string) error
 }
 
 type PostgresStorage struct {
@@ -213,7 +221,6 @@ func (p PostgresStorage) UserContains(id string) (string, error) {
 	return req, nil
 }
 
-// ------------------------    DONE    ------------------------
 func (p PostgresStorage) AddUserSegments(id string, segments string, a album) (album, error) {
 	var album album
 	row := p.db.QueryRow("select * from albums where id = $1", id)
@@ -229,7 +236,7 @@ func (p PostgresStorage) AddUserSegments(id string, segments string, a album) (a
 		if checkSegment(v) && !checkContains(v, album.Segments) {
 			album.Segments = append(album.Segments, strings.ToUpper(v))
 			if len(v) != 0 {
-				req := fmt.Sprintf("Сегмент %s добавлен: %s", v, time.Now().Format("2006-1-2 15:4:5"))
+				req := fmt.Sprintf("Сегмент %s добавлен: %s", strings.ToUpper(v), time.Now().Format("2-1-2006"))
 				album.LogChanges = append(album.LogChanges, req)
 			}
 		}
@@ -241,7 +248,6 @@ func (p PostgresStorage) AddUserSegments(id string, segments string, a album) (a
 	return album, nil
 }
 
-// ------------------------    DONE    ------------------------
 func (p PostgresStorage) DeleteUserSegments(id string, segments string, a album) error {
 	var album album
 	row := p.db.QueryRow("select * from albums where id = $1", id)
@@ -257,7 +263,7 @@ func (p PostgresStorage) DeleteUserSegments(id string, segments string, a album)
 		if checkContains(val, album.Segments) {
 			for i, v := range album.Segments {
 				if slug.Make(v) == slug.Make(val) {
-					req := fmt.Sprintf("Сегмент %s удалён: %s", v, time.Now().Format("01-01-2023"))
+					req := fmt.Sprintf("Сегмент %s удалён: %s", strings.ToUpper(v), time.Now().Format("2-1-2006"))
 					album.Segments = slices.Delete(album.Segments, i, i+1)
 					album.LogChanges = append(album.LogChanges, req)
 				}
@@ -288,6 +294,65 @@ func checkSegment(segment string) bool {
 		}
 	}
 	return false
+}
+
+func (p PostgresStorage) DeletedList(id string, segments string, date string) error {
+	var album album
+	row := p.db.QueryRow("select * from albums where id = $1", id)
+	err := row.Scan(&album.ID, (*pq.StringArray)(&album.Segments), (*pq.StringArray)(&album.LogChanges))
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return err
+		}
+		return err
+	}
+	file, err := os.Create(fmt.Sprintf("Deleted-%s-%s-%s.csv", id, segments, date))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	writer := csv.NewWriter(file)
+
+	for _, v := range album.LogChanges {
+		logchanges := strings.Split(v, " ")
+		if logchanges[1] == segments && logchanges[2] == "удалён:" && logchanges[3] == date {
+			logchanges[0] = id
+			if err := writer.Write(logchanges); err != nil {
+				return err
+			}
+		}
+	}
+	writer.Flush()
+	return nil
+}
+func (p PostgresStorage) AddedList(id string, segments string, date string) error {
+	var album album
+	row := p.db.QueryRow("select * from albums where id = $1", id)
+	err := row.Scan(&album.ID, (*pq.StringArray)(&album.Segments), (*pq.StringArray)(&album.LogChanges))
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return err
+		}
+		return err
+	}
+	file, err := os.Create(fmt.Sprintf("Added-%s-%s-%s.csv", id, segments, date))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	writer := csv.NewWriter(file)
+
+	for _, v := range album.LogChanges {
+		logchanges := strings.Split(v, " ")
+		if logchanges[1] == segments && logchanges[2] == "добавлен:" && logchanges[3] == date {
+			logchanges[0] = id
+			if err := writer.Write(logchanges); err != nil {
+				return err
+			}
+		}
+	}
+	writer.Flush()
+	return nil
 }
 
 // func segmentsArray() []string {
