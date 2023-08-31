@@ -1,3 +1,7 @@
+### PUT RANDOM USERS
+
+curl -X PUT  http://localhost:8080/albums/automatic-add/avito_performance_vas/30
+
 ### Get all users
 
 curl http://localhost:8080/albums

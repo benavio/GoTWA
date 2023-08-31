@@ -6,7 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
+	"math/rand"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -34,6 +37,7 @@ type Storage interface {
 	DeleteSegment(segment string) error
 	DeletedList(id string, segments string, date string) error
 	AddedList(id string, segments string, date string) error
+	AddSegmentsToRandomUsers(percent string, segments string)
 }
 
 type PostgresStorage struct {
@@ -279,7 +283,6 @@ func (p PostgresStorage) DeleteUserSegments(id string, segments string, a album)
 func checkContains(segment string, segments []string) bool {
 	for _, s := range segments {
 		if slug.Make(s) == slug.Make(segment) {
-			fmt.Println(true)
 			return true
 		}
 	}
@@ -353,6 +356,28 @@ func (p PostgresStorage) AddedList(id string, segments string, date string) erro
 	}
 	writer.Flush()
 	return nil
+}
+func (p PostgresStorage) AddSegmentsToRandomUsers(percent string, segments string) {
+	album := storage.ReadUsers()
+	fmt.Println(album[0].ID)
+	if len(album) > 2 {
+		percent, err := strconv.ParseFloat(percent, 8)
+		if err != nil {
+			log.Fatal("NaN")
+		}
+		fmt.Println(len(album), (percent / 100))
+		var leng float64 = float64(len(album))
+		floatCurrentMembers := leng * (percent / 100)
+		currentMembers := int(math.Round(floatCurrentMembers))
+		fmt.Println("------------------------", currentMembers)
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		for currentMembers != 0 {
+			q := r.Intn(len(album))
+			storage.AddUserSegments(album[q].ID, segments, album[q])
+			currentMembers--
+		}
+	}
+
 }
 
 // func segmentsArray() []string {

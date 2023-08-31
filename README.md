@@ -23,6 +23,11 @@ in this project was used "Rest Client".
 /albums/:id/:segments/added-list/:date
 /albums/:id/:segments/deleted-list/:date
 
+# Авоматическое добавление сигментов пользователям PUT
+
+"/albums/automatic-add/:segments/:percent
+
+
 # Добавить и удалить сегмент  POST/DELETE
 /albums/:id/add-segments/:segments
 /albums/:id/delete-segments/:segments

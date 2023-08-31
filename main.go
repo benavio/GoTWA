@@ -107,7 +107,6 @@ func addSegmetsToUserById(c *gin.Context) {
 	segments := c.Param("segments")
 	var newAlbum album
 	c.BindJSON(&newAlbum)
-	fmt.Println("main ", id, segments)
 	album, err := storage.AddUserSegments(id, segments, newAlbum)
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, err)
@@ -146,6 +145,13 @@ func getAddedList(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, album{})
 }
 
+func AddSegmentsRandom(c *gin.Context) {
+	segments := c.Param("segments")
+	percent := c.Param("percent")
+	storage.AddSegmentsToRandomUsers(percent, segments)
+	c.IndentedJSON(http.StatusOK, album{})
+}
+
 func getRouter() *gin.Engine {
 	router := gin.Default()
 	gin.SetMode(gin.ReleaseMode)
@@ -163,6 +169,8 @@ func getRouter() *gin.Engine {
 	router.POST("/segments/add-new-segment/:segmentlist", postSegments)
 	router.GET("/segments", getSegments)
 	router.DELETE("/segments/delete-segment/:segmentlist", deleteSegment)
+
+	router.PUT("/albums/automatic-add/:segments/:percent", AddSegmentsRandom)
 	return router
 }
 
