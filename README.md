@@ -13,3 +13,19 @@
 curls to check endpoint in exaples.txt.
 for curl u can use some extension,
 in this project was used "Rest Client".
+
+# Добавить новый сегмент PUT
+/segments/add-new-segment/:segmentlist
+# Удалить сегмент DELETE
+/segments/delete-segment/:segmentlist
+
+# Отчёты GET
+/albums/:id/:segments/added-list/:date
+/albums/:id/:segments/deleted-list/:date
+
+# Добавить и удалить сегмент  POST/DELETE
+/albums/:id/add-segments/:segments
+/albums/:id/delete-segments/:segments
+
+# Инфомация о пользователе (в каких сегментах состоит) GET
+/albums/:id
